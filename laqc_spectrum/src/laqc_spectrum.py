@@ -1,21 +1,27 @@
 # -*- coding: utf-8 -*-
 """
-UNIFEI - Universidade Federal de Itajuba.
+UNIFEI - Federal University of Itajubá.
 
-LaQC - Laboratorio de Quimica Computacional
+LaQC - Computational Chemistry Laboratory
 
-autores:
-    Astrubal (calculo gerador dos spectros)
-    Rogerio (interface com usuario)
+authors:
+    Astrubal Lozada (mathematical specification for spectrum calculation)
+    Rogério Ribeiro Macêdo (Implementation of mathematical specification and user design)
 """
+
+#
+# Importing modules
+#
 import math
 import sys
 import platform
 from pathlib import Path
 import numpy as np
+import time
 
-
-# Constant
+#
+# Constants
+#
 A = 1.30629744736E8
 FACT1 = 1.0E7
 FACT2 = 1.0E0
@@ -24,7 +30,7 @@ SIGMA = 3099.6
 
 def head_msg():
     """
-    Mensagem de cabeçalho.
+    Header message.
 
     Returns
     -------
@@ -33,67 +39,67 @@ def head_msg():
     """
     print()
     print("-".center(79, "-"))
-    print(f'{"|":<1} {"UNIFEI - Universidade Federal de Itajubá":^75} '
+    print(f'{"|":<1} {"UNIFEI - Federal University of Itajubá":^75} '
           f'{"|":>1}')
-    print(f'{"|":<1} {"LaQC - Laboratório de Química Computacional":^75} '
+    print(f'{"|":<1} {"LaQC - Computational Chemistry Laboratory":^75} '
           f'{"|":>1}')
     print(f'{"|":<1} {" ":^75} {"|":>1}')
-    print(f'{"|":<1} {">>> digite [sair] para encerrar o programa <<<":^75} '
+    print(f'{"|":<1} {">>> use the command [exit] to terminate the program <<<":^75} '
           f'{"|":>1}')
     print(f'{"|":<1} {" ":^75} {"|":>1}')
     print("-".center(79, "-"))
-    print(f'{"|":<1} {"Gráfico UV-VIS de Cálculo dos Estados Excitados":^75} '
+    print(f'{"|":<1} {"UV-VIS Chart for Excited States Calculations.":^75} '
           f'{"|":>1}')
     print("-".center(79, "-"))
     print()
 
 
-def get_separador():
+def get_separator():
     """
-    Captura o separador de caminho de acordo com o sistema operacional.
+    Linux and Windows have different directory separators, so this procedure ensures we get that specific separator.
 
     Returns
     -------
     separador : string
-        Caracter separador.
+        Character separator.
 
     """
-    separador = "/"
-    sistema_operacional = platform.system()
-    if sistema_operacional == 'Linux':
-        separador = "/"
+    separator = "/"
+    operational_system = platform.system()
+    if operational_system == 'Linux':
+        separator = "/"
     else:
-        separador = "\\"
+        separator = "\\"
 
-    return separador
+    return separator
 
 
 def file_exist(file=""):
     """
-    Verifica se o arquivo existe.
+    Verify if a 'file' exists.
 
     Parameters
     ----------
     file : txt
-        Nome do arquivo e/ou diretório
+        Name of file or directory.
 
     Returns
     -------
     Bool
-        True, existe; False, não existe.
+        True, exist; False, otherwise.
 
     """
-    arq_existe = False
+    file_exist = False
     if len(file) > 0:
         path = Path(file)
-        arq_existe = path.exists()
+        file_exist = path.exists()
 
-    return arq_existe
+    return file_exist
 
 
 def tchau():
     """
-    Saindo e dizendo Tchau!.
+    We are leaving and saying goodbye (tchau, inté!!).
 
     Returns
     -------
@@ -102,12 +108,12 @@ def tchau():
     """
     print("")
     print("-".center(79, "-"))
-    print(f'{"|":<1} {"UNIFEI - Universidade Federal de Itajubá":^75} '
+    print(f'{"|":<1} {"UNIFEI - Federal University of Itajubá":^75} '
           f'{"|":>1}')
-    print(f'{"|":<1} {"LaQC - Laboratório de Química Computacional":^75} '
+    print(f'{"|":<1} {"LaQC - Computational Chemistry Laboratory":^75} '
           f'{"|":>1}')
     print(f'{"|":<1} {" ":^75} {"|":>1}')
-    print(f'{"|":<1} {"Tchau!!!!":^75} '
+    print(f'{"|":<1} {"Inté!!!!":^75} '
           f'{"|":>1}')
     print(f'{"|":<1} {" ":^75} {"|":>1}')
     print("-".center(79, "-"))
@@ -118,41 +124,41 @@ def tchau():
 def questions(type_of_fit, type_of_average, wave_numbers,
               wave_numbers_interval=0.5):
     """
-    Questões que o usuário deve responder antes da execução dos procedimentos.
+    To specify some parameters.
 
     Parameters
     ----------
     type_of_fit : TYPE
-        Tipo de ajuste a ser feito (gaussiano ou lorentziano).
+        Type of adjustment. (gaussian).
     type_of_average : TYPE
-        Tipo de média a ser usada para geração do gráfico resumo.
+        Type of average that will used in the generation of resumen graph.
     wave_numbers : TYPE
-        Vetor que indica a faixa de número de onda a ser utilizada no cálculo.
+        Vector that indicates the wavenumber range that will used in the calculation.
     wave_numbers_interval : TYPE
-        Intervalo entre as faixas de onda.
+        The interval between waves.
 
     Returns
     -------
     tyoe_of_fit, type_of_average, wave_numbers, wave_numbers_interval.
 
     """
-    val = input("Tipo do ajuste (gaussian or lorentzian) "
+    val = input("Type of adjustment (gaussian or lorentzian) "
                 "[gaussian]".ljust(57, ".") + ": ").strip()
     if val != "":
         if val in ['gaussian', 'lorentzian']:
             type_of_fit = val
         else:
-            if val == "sair":
+            if val == "exit":
                 tchau()
             else:
-                print(f" + Tipo de ajuste inválido ({val}), usando ({'gaussian'})")
+                print(f" + Type of adjustment invalid. ({val}), using ({'gaussian'})")
                 type_of_fit = "gaussian"
 
-    val = input("Números de onda (100-800) [100-800]".
+    val = input("Wavenumbers (100-800) [100-800]".
                 ljust(57, ".") + ": ").strip()
     values = [100, 800]
     if val != "":
-        if val == "sair":
+        if val == "exit":
             tchau()
         else:
             try:
@@ -162,9 +168,9 @@ def questions(type_of_fit, type_of_average, wave_numbers,
                 values[0] = 100
                 values[1] = 800
 
-    val = input("Intervalo dos números de onda [10.0]".ljust(57, ".") + ": ")
+    val = input("Interval between waves [10.0]".ljust(57, ".") + ": ")
     if val != "":
-        if val == "sair":
+        if val == "exit":
             tchau()
         else:
             try:
@@ -172,27 +178,27 @@ def questions(type_of_fit, type_of_average, wave_numbers,
                 wave_numbers = list(np.arange(values[0],
                                               values[1]+1, wave_numbers_interval))
             except ValueError:
-                print(f" + Intervalo inválido ({val}), usando ({'10'})")
+                print(f" + Invalid interval ({val}), using ({'10'})")
                 wave_numbers_interval = 10
 
-    val = input("Tipo de média (aritmética) [aritmética]".
+    val = input("Type of average (arithmetic) [arithmetic]".
                 ljust(57, ".") + ": ").strip()
     if val != "":
-        if val in ['aritmética']:
+        if val in ['arithmetic']:
             type_of_average = val
         else:
-            if val == "sair":
+            if val == "exit":
                 tchau()
             else:
-                print(f" + Tipo de média inválida ({val}),"
-                      "usando ({'aritmética'})")
-                type_of_average = 'aritmética'
+                print(f" + Invalid type of average ({val}),"
+                      "using ({'aritmética'})")
+                type_of_average = 'arithmetic'
 
-    # Retorno
+    # Return
     return type_of_fit, type_of_average, wave_numbers, wave_numbers_interval
 
 
-def get_arquivos(local, tipo=".log"):
+def get_files(local, type=".log"):
     """
     Lista dos arquivos .log no diretorio especificado.
 
@@ -208,12 +214,12 @@ def get_arquivos(local, tipo=".log"):
 
     # List of all files with extension .log
     list_files = [log_file.name for log_file in path.iterdir()
-                  if log_file.is_file() if log_file.suffix == tipo]
+                  if log_file.is_file() if log_file.suffix == type]
 
     return list_files
 
 
-def get_arquivos_gaussian(local, tipo=".log"):
+def get_files_gaussian(local, tipo=".log"):
     """
     Lista dos arquivos .log no diretorio especificado.
 
@@ -277,11 +283,11 @@ def extract_data_orca():
     try:
         local_files = input("Local dos arquivos".ljust(57, ".") + ": ").strip()
         if local_files.strip() != "":
-            if local_files[-1] != get_separador():
-                local_files = local_files + get_separador()
+            if local_files[-1] != get_separator():
+                local_files = local_files + get_separator()
 
             if file_exist(local_files):
-                list_log = get_arquivos(local_files, '.out')
+                list_log = get_files(local_files, '.out')
 
                 for log in list_log:
                     local_log = local_files + log
@@ -354,16 +360,18 @@ def extract_data_gaussian():
     try:
         local_files = input("Local dos arquivos".ljust(57, ".") + ": ").strip()
         if local_files.strip() != "":
-            if local_files[-1] != get_separador():
-                local_files = local_files + get_separador()
+            if local_files[-1] != get_separator():
+                local_files = local_files + get_separator()
 
             if file_exist(local_files):
-                list_log = get_arquivos_gaussian(local_files, '.log')
+                list_log = get_files_gaussian(local_files, '.log')
 
                 # Extraindo dados
+                print(" - Extraindo dados...")
                 for log in list_log:
                     local_log = local_files + log
                     print(f" - Extraindo estado excitado do arquivo: {log}")
+                    time.sleep(0.400)
                     num_excited_state = 0
                     with open(local_log, "r") as f_arquivo:
                         secao_encontrada = False
@@ -408,7 +416,7 @@ def extract_data_gaussian():
                 sys.exit()
 
         else:
-            print(" + Caminho não informado!")
+            print(" + Caminho não informado. Saindo!")
             sys.exit()
     except OSError as msg_err:
         print(f" + Erro: {msg_err}")
@@ -527,8 +535,7 @@ def calcula_dp_erro(medias_spectrum, dados_spectrum):
             if j[0] == num_onda:
                 diferenca = diferenca + ((vlr_spec - j[1])**2)
                 qtde += 1
-        vlr_dp.append[[num_onda, diferenca/qtde]]
-
+        vlr_dp.append([num_onda, diferenca/qtde])
 
 
 def fit_lorentzian(type_of_average, wave_numbers):
@@ -648,15 +655,18 @@ if __name__ == "__main__":
     if file_exist("input.dat"):
         main(type_of_fit, type_of_average, wave_numbers, wave_numbers_interval)
     else:
+        val = "S"
         val = input("O input.dat não existe. Deseja gerá-lo? "
-                    "(S or N) [N]".ljust(57, ".") + ": ")
+                    "(S or N) [S]".ljust(57, ".") + ": ")
+        if (val == ""):
+            val = "S"
         if (val in ['n', 's', 'N', 'S']):
             if (val in ["N", "n"]):
                 tchau()
             else:
                 val = input("Origem do arquivo de saída (Gaussian ou Orca) "
                             "[Gaussian]".ljust(57, ".") + ": ").strip()
-                if val == "sair":
+                if val == "exit":
                     tchau()
 
                 if val != "":
@@ -674,4 +684,4 @@ if __name__ == "__main__":
                     else:
                         print(f' + Valor ({val}) inválido!')
         else:
-            print(' + Valor ({val}) inválido!')
+            print(f' + Valor ({val}) inválido!')
