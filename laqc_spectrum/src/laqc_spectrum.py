@@ -128,13 +128,13 @@ def questions(type_of_fit, type_of_average, wave_numbers,
 
     Parameters
     ----------
-    type_of_fit : TYPE
+    type_of_fit : str
         Type of adjustment. (gaussian).
-    type_of_average : TYPE
+    type_of_average : str
         Type of average that will used in the generation of resumen graph.
-    wave_numbers : TYPE
+    wave_numbers : array
         Vector that indicates the wavenumber range that will used in the calculation.
-    wave_numbers_interval : TYPE
+    wave_numbers_interval : str
         The interval between waves.
 
     Returns
@@ -195,49 +195,50 @@ def questions(type_of_fit, type_of_average, wave_numbers,
                 type_of_average = 'arithmetic'
 
     # Return
+    print(wave_numbers)
     return type_of_fit, type_of_average, wave_numbers, wave_numbers_interval
 
 
-def get_files(local, type=".log"):
+def get_files(local, file_type=".log"):
     """
-    Lista dos arquivos .log no diretorio especificado.
+    Get all files in the specified directory with a type of extension.
 
     Returns
     -------
     list_files : array
-        Lista com o nome de todos os arquivos encontrados.
+       Return a list of names with all found files in the specified directory.
 
     """
     list_files = []
 
     path = Path(local)
 
-    # List of all files with extension .log
+    # List of all files with extension specified in [file_type] parameter.
     list_files = [log_file.name for log_file in path.iterdir()
-                  if log_file.is_file() if log_file.suffix == type]
+                  if log_file.is_file() if log_file.suffix == file_type]
 
     return list_files
 
 
-def get_files_gaussian(local, tipo=".log"):
+def get_files_gaussian(local, file_type=".log"):
     """
-    Lista dos arquivos .log no diretorio especificado.
+    Get all files in the specified directory with a type of extension.
 
-    Já realiza tratamento de verificação da expressão "Normal termination" para o Gaussian.
+    After finding the file, verify the existence of the expression [Normal termination] in the file log.
 
     Returns
     -------
     list_files : array
-        Lista com o nome de todos os arquivos encontrados.
+        Return a list of names with all found files in the specified directory.
 
     """
     list_files = []
 
     path = Path(local)
 
-    # List of all files with extension .log
+    # List of all files with extension specified in [file_type] parameter.
     for log_file in path.iterdir():
-        if log_file.is_file() and log_file.suffix == tipo:
+        if log_file.is_file() and log_file.suffix == file_type:
             if normal_termination(log_file):
                 list_files.append(log_file.name)
 
@@ -246,31 +247,31 @@ def get_files_gaussian(local, tipo=".log"):
 
 def normal_termination(local_log):
     """
-    Verifica a presença da expressão 'Normal termination of Gaussian 09'.
+    Verify the existence of the expression [Normal termination] in the file log.
 
     Parameters
     ----------
-    local_log : TYPE
-        DESCRIPTION.
+    local_log : str
+        Name of the log file and the path where it is located.
 
     Returns
     -------
-    continuar : TYPE
-        DESCRIPTION.
+    continuar : bool
+        True if the expression [Normal termination] was founded, or false otherwise..
 
     """
-    continuar = False
-    with open(local_log) as f_arquivo:
-        for line in f_arquivo:
+    founded = False
+    with open(local_log) as f_file:
+        for line in f_file:
             if "Normal termination of Gaussian 09" in line:
-                continuar = True
+                founded = True
 
-    return continuar
+    return founded
 
 
 def extract_data_orca():
     """
-    Extraindo dados de estados excitados no arquivo de saída do Orca.
+    Extract data about excited states in Orca files and create a file name "input.dat".
 
     Returns
     -------
@@ -281,7 +282,7 @@ def extract_data_orca():
     list_num_excited_state = []
 
     try:
-        local_files = input("Local dos arquivos".ljust(57, ".") + ": ").strip()
+        local_files = input("Local of files".ljust(57, ".") + ": ").strip()
         if local_files.strip() != "":
             if local_files[-1] != get_separator():
                 local_files = local_files + get_separator()
@@ -291,24 +292,24 @@ def extract_data_orca():
 
                 for log in list_log:
                     local_log = local_files + log
-                    print(f" - Extraindo estado excitado do arquivo: {log}")
+                    print(f" - Extract excited states from the file: {log}")
                     num_excited_state = 0
                     with open(local_log, 'r', encoding='utf-8') as f_arquivo:
-                        secao_encontrada = False
+                        section_founded = False
 
                         for line in f_arquivo:
-                            txt_linha = line.strip()
-                            if txt_linha.startswith("ABSORPTION SPECTRUM VIA "
-                                                    "TRANSITION ELECTRIC "
-                                                    "DIPOLE MOMENTS"):
-                                secao_encontrada = True
+                            txt_line = line.strip()
+                            if txt_line.startswith("ABSORPTION SPECTRUM VIA "
+                                                   "TRANSITION ELECTRIC "
+                                                   "DIPOLE MOMENTS"):
+                                section_founded = True
                             else:
-                                if len(txt_linha) == 0 and secao_encontrada:
+                                if len(txt_line) == 0 and section_founded:
                                     break
 
-                            if secao_encontrada:
+                            if section_founded:
                                 resto = []
-                                for i in txt_linha.split(" "):
+                                for i in txt_line.split(" "):
                                     if i != "":
                                         resto.append(i)
 
@@ -327,10 +328,10 @@ def extract_data_orca():
                 # Saving data
                 f_input = open("input.dat", "w")
 
-                # Número total de estados estrutura
+                # Total number of structures
                 f_input.write(f"{len(list_log):<4d}\n")
 
-                # Número de estados excitados em cada estrutura
+                # Total number of excited states founded in which structure.
                 val_num_excited_state = " ".join(str(i) for i in
                                                  list_num_excited_state)
                 f_input.write(f"{val_num_excited_state}\n")
